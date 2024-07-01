@@ -86,14 +86,15 @@
  * LibCPUID provides CPU identification and access to the CPUID and RDTSC
  * instructions on the x86.
  * <p>
- * To execute CPUID, use \ref cpu_exec_cpuid <br>
- * To execute RDTSC, use \ref cpu_rdtsc <br>
+ * To execute CPUID, use \ref cpu_exec_cpuid. <br>
+ * To execute RDTSC, use \ref cpu_rdtsc. <br>
  * To fetch the CPUID info needed for CPU identification, use
- *   \ref cpuid_get_raw_data <br>
- * To make sense of that data (decode, extract features), use \ref cpu_identify <br>
+ *   \ref cpuid_get_raw_data or \ref cpuid_get_all_raw_data. <br>
+ * To make sense of that data (decode, extract features), use
+ *    \ref cpu_identify or \ref cpu_identify_all. <br>
  * To detect the CPU speed, use either \ref cpu_clock, \ref cpu_clock_by_os,
  * \ref cpu_tsc_mark + \ref cpu_tsc_unmark + \ref cpu_clock_by_mark,
- * \ref cpu_clock_measure or \ref cpu_clock_by_ic.
+ * \ref cpu_clock_measure, \ref cpu_clock_by_ic or \ref cpu_clock_by_tsc.
  * Read carefully for pros/cons of each method. <br>
  *
  * To read MSRs, use \ref cpu_msr_driver_open to get a handle, and then
@@ -190,7 +191,17 @@ typedef enum {
  * @brief CPU architecture
  */
 typedef enum {
-	/* TODO: add x86 levels */
+	/* x86: https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels */
+	CPU_FEATURE_LEVEL_I386, /*!< i386 */
+	CPU_FEATURE_LEVEL_I486, /*!< i486 */
+	CPU_FEATURE_LEVEL_I586, /*!< i586 */
+	CPU_FEATURE_LEVEL_I686, /*!< i686 */
+	CPU_FEATURE_LEVEL_X86_64_V1, /*!< x86-64-v1 */
+	CPU_FEATURE_LEVEL_X86_64_V2, /*!< x86-64-v2 */
+	CPU_FEATURE_LEVEL_X86_64_V3, /*!< x86-64-v3 */
+	CPU_FEATURE_LEVEL_X86_64_V4, /*!< x86-64-v4 */
+
+	/* ARM: https://en.wikipedia.org/wiki/ARM_architecture_family#Cores */
 	FEATURE_LEVEL_ARM_V1 = 100, /*!< ARMv1 */
 	FEATURE_LEVEL_ARM_V2, /*!< ARMv2 */
 	FEATURE_LEVEL_ARM_V3, /*!< ARMv3 */
@@ -302,6 +313,12 @@ struct cpu_raw_data_t {
 	 * this stores the result of CPUID with eax = 8000001Dh and
 	 *  ecx = 0, 1, 2... */
 	uint32_t amd_fn8000001dh[MAX_AMDFN8000001DH_LEVEL][NUM_REGS];
+
+	/** when the CPU is AMD and supports leaf 80000026h
+	 * (Extended CPU Topology leaf)
+	 * this stores the result of CPUID with eax = 80000026h and
+	 *  ecx = 0, 1, 2... */
+	uint32_t amd_fn80000026h[MAX_AMDFN80000026H_LEVEL][NUM_REGS];
 
 	/** when then CPU is ARM-based and supports MIDR
 	 * (Main ID Register) */
@@ -507,6 +524,7 @@ struct cpu_id_t {
 	 */
 	uint8_t flags[CPU_FLAGS_MAX];
 
+#ifndef LIBCPUID_DISABLE_DEPRECATED
 	/**
 	 * CPU family (BaseFamily[3:0])
 	 * @deprecated replaced by \ref x86_id_t::family (prefix member with `x86.`, e.g. `id.x86.family`)
@@ -542,6 +560,7 @@ struct cpu_id_t {
 	 */
 	LIBCPUID_DEPRECATED("replace with '.x86.ext_model' in your code to fix the warning")
 	int32_t ext_model;
+#endif /* LIBCPUID_DISABLE_DEPRECATED */
 
 	/**
 	 * contains architecture specific info.
@@ -604,11 +623,13 @@ struct cpu_id_t {
 	/** L4 cache size in KB. Zero on most systems */
 	int32_t l4_cache;
 
+#ifndef LIBCPUID_DISABLE_DEPRECATED
 	/** Cache associativity for the L1 data cache. -1 if undetermined
 	 * @deprecated replaced by \ref cpu_id_t::l1_data_assoc
 	 */
 	LIBCPUID_DEPRECATED("replace with 'l1_data_assoc' in your code to fix the warning")
 	int32_t l1_assoc;
+#endif /* LIBCPUID_DISABLE_DEPRECATED */
 
 	/** Cache associativity for the L1 data cache. -1 if undetermined */
 	int32_t l1_data_assoc;
@@ -625,11 +646,13 @@ struct cpu_id_t {
 	/** Cache associativity for the L4 cache. -1 if undetermined */
 	int32_t l4_assoc;
 
+#ifndef LIBCPUID_DISABLE_DEPRECATED
 	/** Cache-line size for L1 data cache. -1 if undetermined
 	 * @deprecated replaced by \ref cpu_id_t::l1_data_cacheline
 	 */
 	LIBCPUID_DEPRECATED("replace with 'l1_data_cacheline' in your code to fix the warning")
 	int32_t l1_cacheline;
+#endif /* LIBCPUID_DISABLE_DEPRECATED */
 
 	/** Cache-line size for L1 data cache. -1 if undetermined */
 	int32_t l1_data_cacheline;
