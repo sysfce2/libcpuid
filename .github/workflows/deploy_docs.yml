@@ -1,5 +1,5 @@
 # Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy HTML docs to Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -41,7 +41,7 @@ jobs:
           sudo apt-get install -y -qq cmake doxygen
 
       - name: Generate build system
-        run: cmake -S . -B build -DENABLE_DOCS:BOOL=ON
+        run: cmake -S . -B build -DLIBCPUID_ENABLE_DOCS=ON
 
       - name: Run Doxygen
         run: make -C build docs

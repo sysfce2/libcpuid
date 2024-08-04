@@ -8,9 +8,13 @@ on:
     branches:
       - '*'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_win:
-    name: Build
+    name: Build on Windows ${{ matrix.platform.bitness }} as ${{ matrix.config }}
     runs-on: windows-latest
     strategy:
       matrix:

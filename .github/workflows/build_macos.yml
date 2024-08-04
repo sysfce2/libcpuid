@@ -1,4 +1,4 @@
-name: Build (UNIX)
+name: Build (macOS)
 
 on:
   push:
@@ -8,16 +8,19 @@ on:
     branches:
       - '*'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build_unix:
-    name: Build
+  build_macos:
+    name: Build on ${{ matrix.os.name }}
     runs-on: ${{ matrix.os.label }}
     strategy:
       matrix:
         os:
           - { label: macos-latest, name: macos-aarch64 }
           - { label: macos-13, name: macos-x86_64 }
-          - { label: ubuntu-latest, name: linux-x86_64 }
     env:
       OS_NAME: ${{ matrix.os.name }}
 
@@ -25,17 +28,10 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Generate build system
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="" -DLIBCPUID_TESTS:BOOL=ON
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="" -DLIBCPUID_ENABLE_TESTS=ON
 
     - name: Build
       run: cmake --build build
-
-    # - name: Run cpuid_tool
-    #   run: |
-    #     echo "RAW dump"
-    #     ./build/cpuid_tool/cpuid_tool --save=-
-    #     echo "Report"
-    #     ./build/cpuid_tool/cpuid_tool --all
 
     - name: Run tests
       run: |
